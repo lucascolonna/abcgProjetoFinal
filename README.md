@@ -1,12 +1,52 @@
-# Atividade 02 
+# Resgate de helicoptero
 Lucas Colonna Romano da Silva - 11202020710
 
 Caique Rodrigues Do Nascimento - 11201722070
 
-Para este projeto, optamos por fazer a criação de uma aplicação interativa que permite ao usuário manipular uma bola 3D em movimento na tela, deslocando-se nos eixos x e y, enquanto gira em torno do seu próprio eixo, o eixo z. A aplicação também oferece a opção para o usuário definir a quantidade de triângulos que compõem a bola, variando de 0 até 11777, o que influencia na visibilidade da bola, podendo torná-la de menos a mais visível. Além disso, a aplicação permite que o usuário selecione um "corte" específico para visualizar a bola.
+Nosso projeto envolve simular o voo de um helicóptero de resgate, em que o usuário pode movimentar o modelo dentro do cenário. 
 
-É importante notar que o desenvolvimento desse projeto envolveu o uso da biblioteca ABCg, fornecida pelo professor para a realização da atividade. Esta biblioteca facilita a implementação das funcionalidades necessárias para a interação e visualização da bola 3D, possibilitando a criação de uma experiência interativa e personalizável para o usuário.
+Para implementar a sensação de movimentação foi criado o seguinte bloco de código: 
 
+```if (event.type == SDL_KEYDOWN) {
+      if (event.key.keysym.sym == SDLK_DOWN) {
+          position.y -= 0.1f;
+      }
+      else if (event.key.keysym.sym == SDLK_UP) {
+          position.y += 0.1f;
+      }
+      else if (event.key.keysym.sym == SDLK_LEFT) {
+          position.x -= 0.1f;
+      }
+      else if (event.key.keysym.sym == SDLK_RIGHT) {
+          position.x += 0.1f;
+      }
+  }
+  else if (event.type == SDL_KEYUP) {
+      if (event.key.keysym.sym == SDLK_DOWN) {
+          position.y += 0.1f;
+      }
+      else if (event.key.keysym.sym == SDLK_UP) {
+          position.y -= 0.1f;
+      }
+      else if (event.key.keysym.sym == SDLK_LEFT) {
+          position.x += 0.1f;
+      }
+      else if (event.key.keysym.sym == SDLK_RIGHT) {
+          position.x -= 0.1f;
+      }
+  }
+```
+
+Esse bloco de código permite a captura de eventos do teclado e atualiza o vetor `position`. Esse vetor é então usado na `viewMatriz` para criar a sensação de movimento, como segue: 
+```
+ m_viewMatrix =
+      glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f + m_zoom),	glm::lookAt(glm::vec3(0.0f, 0.0f, 2.0f + m_zoom),
+                  glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+      glm::vec3(0.0f, 0.0f, 0.0f) + position, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+```
+
+A carga do modelo é feita através de um arquivo `.obj` e segue também a implementação de um skybox. 
 
 ## License
 
