@@ -1,7 +1,6 @@
 # Resgate de helicoptero
 Lucas Colonna Romano da Silva - 11202020710
 
-Caique Rodrigues Do Nascimento - 11201722070
 
 Nosso projeto envolve simular o voo de um helicóptero de resgate, em que o usuário pode movimentar o modelo dentro do cenário. 
 
