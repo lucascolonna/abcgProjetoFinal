@@ -196,6 +196,7 @@ void Window::onUpdate() {
                   glm::vec3(0.0f, 0.0f, 0.0f) + position, glm::vec3(0.0f, 1.0f, 0.0f));
 
   if (glm::all(glm::epsilonEqual(position, m_position, 0.25f))) {
+     points += 1;
      std::cout << "Hello, world!" << std::endl;
   }
 }
@@ -204,6 +205,13 @@ void Window::onPaintUI() {
   abcg::OpenGLWindow::onPaintUI();
   auto const scaledWidth{gsl::narrow_cast<int>(m_viewportSize.x * 0.8f)};
   auto const scaledHeight{gsl::narrow_cast<int>(m_viewportSize.y * 0.8f)};
+
+  // Points display
+  ImGui::SetNextWindowPos(ImVec2(0, 65));
+  ImGui::SetNextWindowSize(ImVec2(100, 50));
+  ImGui::Begin("Pontos", nullptr);
+  ImGui::Text("%d", points);
+  ImGui::End();
 
   // File browser for models
   static ImGui::FileBrowser fileDialogModel;
@@ -566,7 +574,7 @@ void Window::standardize() {
 
    // Center and scale
    auto center{(min + max) / 2.0f};
-    auto const scaling{0.2f / glm::length(max - min)};
+    auto const scaling{0.25f / glm::length(max - min)};
    for (auto &vertex : m_vertices) {
      vertex.position = (vertex.position - center) * scaling;
    }
