@@ -96,7 +96,6 @@ void Window::onCreate() {
 
   createSkybox();
   createBall();
-
 }
 
 void Window::loadModel(std::string_view path) {
@@ -184,23 +183,25 @@ void Window::onPaint() {
 
   if (m_currentProgramIndex == 0 || m_currentProgramIndex == 1) {
     renderSkybox();   
-    renderBall(); 
   }
 }
 
 void Window::onUpdate() {  
  m_modelMatrix = m_trackBallModel.getRotation();
  std::cout << "Position: (" << position.x << ", " << position.y << ", " << position.z << ")" << std::endl;
+ std::cout << "Position Ball: (" << m_position.x << ", " << m_position.y << ", " << m_position.z << ")" << std::endl;
 
  m_viewMatrix =
       glm::lookAt(glm::vec3(0.0f, 0.0f, 2.0f + m_zoom),
                   glm::vec3(0.0f, 0.0f, 0.0f) + position, glm::vec3(0.0f, 1.0f, 0.0f));
+
+  if (glm::all(glm::epsilonEqual(position, m_position, 0.25f))) {
+     std::cout << "Hello, world!" << std::endl;
+  }
 }
 
 void Window::onPaintUI() {
   abcg::OpenGLWindow::onPaintUI();
-
-
   auto const scaledWidth{gsl::narrow_cast<int>(m_viewportSize.x * 0.8f)};
   auto const scaledHeight{gsl::narrow_cast<int>(m_viewportSize.y * 0.8f)};
 
@@ -398,6 +399,8 @@ void Window::onDestroy() {
   for (auto const &program : m_programs) {
     abcg::glDeleteProgram(program);
   }
+  destroyBall();
+  destroySkybox();
 }
 
 void Window::createSkybox() {
@@ -453,6 +456,7 @@ void Window::createBall() {
 
   // Load model
   loadModelFromFile(assetsPath + "tennisball.obj");
+  standardize();
 
   m_verticesToDraw = m_indices.size();
 
@@ -490,8 +494,83 @@ void Window::createBall() {
 
   // End of binding to current VAO
   abcg::glBindVertexArray(0);
+}
+
+void Window::renderBall(){
+  auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
+   m_position = m_position + glm::vec3(0.0f, 0.0f, 0.0f);
+
+   //Move along the Y-axis with a speed of 0.2 units per second
+   if (m_position.y <= 1.0f && reachedTop == 0) {
+      m_position = m_position + glm::vec3(0.0f, 0.2f*deltaTime*m_speed, 0.0f);  
+
+      if (m_position.y >= 0.75f) {
+        reachedTop = 1;
+      }
+   }
+
+   if (reachedTop == 1) {
+      m_position = m_position + glm::vec3(0.0f, -0.2f*deltaTime*m_speed, 0.0f);  
+
+      if (m_position.y <= -0.75f) {
+        reachedTop = 0;
+      }
+   }
+
+   //Move along the X-axis with a speed of 0.2 units per second
+   if (m_position.x <= 1.0f && reachedSide == 0) {
+      m_position = m_position + glm::vec3(0.15f*deltaTime*2, 0.0f, 0.0f);  
+
+      if (m_position.x >= 0.75f) {
+        reachedSide = 1;
+      }
+   }
+
+   if (reachedSide == 1) {
+      m_position = m_position + glm::vec3(-0.15f*deltaTime*2, -0.0f, -0.0f);  
+
+     if (m_position.x <= -0.75f) {
+        reachedSide = 0;
+      }
+   }
+
+  abcg::glUseProgram(m_ballProgram);
+  abcg::glBindVertexArray(m_ballVAO);
+
+
+   // Update uniform variable
+   auto const positionLocation{abcg::glGetUniformLocation(m_ballProgram, "position")};
+   abcg::glUniform3f(positionLocation, m_position.x, m_position.y, m_position.z);
+  
+
+
+  // Draw triangles
+  abcg::glDrawElements(GL_TRIANGLES, m_verticesToDraw, GL_UNSIGNED_INT,
+                       nullptr);
+
+  abcg::glBindVertexArray(0);
+  abcg::glUseProgram(0);
 
 }
+
+void Window::standardize() {
+   // Center to origin and normalize bounds to [-1, 1]
+
+   // Get bounds
+   glm::vec3 max(std::numeric_limits<float>::lowest());
+   glm::vec3 min(std::numeric_limits<float>::max());
+   for (auto const &vertex : m_vertices) {
+     max = glm::max(max, vertex.position);
+     min = glm::min(min, vertex.position);
+   }
+
+   // Center and scale
+   auto center{(min + max) / 2.0f};
+    auto const scaling{0.2f / glm::length(max - min)};
+   for (auto &vertex : m_vertices) {
+     vertex.position = (vertex.position - center) * scaling;
+   }
+ }
 
 void Window::loadModelFromFile(std::string_view path) {
   tinyobj::ObjReader reader;
@@ -545,7 +624,6 @@ void Window::loadModelFromFile(std::string_view path) {
   }
 }
 
-
 void Window::renderSkybox() {
   abcg::glUseProgram(m_skyProgram);
 
@@ -575,25 +653,14 @@ void Window::renderSkybox() {
   abcg::glUseProgram(0);
 }
 
-void Window::renderBall(){
-   // Clear color buffer and depth buffer
-  //abcg::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  abcg::glViewport(0, 0, m_viewportSize.x, m_viewportSize.y);
-
-  abcg::glUseProgram(m_ballProgram);
-  abcg::glBindVertexArray(m_ballVAO);
-
-  // Draw triangles
-  abcg::glDrawElements(GL_TRIANGLES, 100000 , GL_UNSIGNED_INT,
-                       nullptr);
-
-  abcg::glBindVertexArray(0);
-  abcg::glUseProgram(0);
-}
-
 void Window::destroySkybox() const {
   abcg::glDeleteProgram(m_skyProgram);
   abcg::glDeleteBuffers(1, &m_skyVBO);
   abcg::glDeleteVertexArrays(1, &m_skyVAO);
+}
+
+void Window::destroyBall() const {
+  abcg::glDeleteProgram(m_ballProgram);
+  abcg::glDeleteBuffers(1, &m_ballVBO);
+  abcg::glDeleteVertexArrays(1, &m_ballVAO);
 }
