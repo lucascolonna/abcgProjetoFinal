@@ -179,6 +179,11 @@ void Window::onPaint() {
   m_model.render(m_trianglesToDraw);
   renderBall();
 
+  if (glm::all(glm::epsilonEqual(position, m_position, 0.25f))) {
+     points += 1;
+     std::cout << "Hello, world!" << std::endl;
+  }
+
   abcg::glUseProgram(0);
 
   if (m_currentProgramIndex == 0 || m_currentProgramIndex == 1) {
@@ -195,10 +200,7 @@ void Window::onUpdate() {
       glm::lookAt(glm::vec3(0.0f, 0.0f, 2.0f + m_zoom),
                   glm::vec3(0.0f, 0.0f, 0.0f) + position, glm::vec3(0.0f, 1.0f, 0.0f));
 
-  if (glm::all(glm::epsilonEqual(position, m_position, 0.25f))) {
-     points += 1;
-     std::cout << "Hello, world!" << std::endl;
-  }
+  
 }
 
 void Window::onPaintUI() {
